@@ -46,6 +46,13 @@ def dropbox_upload(file, json_name):
         if dbx:
             dropbox_upload(file, json_name)
 
+def dropbox_load_binary(path):
+    global dbx
+    # This should use the Dropbox API's 'files_download' method
+    # and return the .content (bytes) rather than a string or dict.
+    _, res = dbx.files_download(path)
+    return res.content
+
 
 # Load teams.json from Dropbox
 def dropbox_load(json_name):
