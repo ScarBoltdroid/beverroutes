@@ -39,10 +39,25 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 @st.cache_resource
 def load_belgium_dem():
-    dem_path = os.path.join(DATA_DIR, "belgium_elevation_30m.tif")
-    if os.path.exists(dem_path):
-        return rasterio.open(dem_path)
-    return None
+    local_tif_path = os.path.join(DATA_DIR, "belgium_elevation_30m.tif")
+    dropbox_tif_path = "data/belgium_elevation_30m.tif" # The path in your Dropbox
+
+    # 1. If the file isn't on the local (ephemeral) disk, get it from Dropbox
+    if not os.path.exists(local_tif_path):
+        with st.spinner("Downloading Elevation Model from Dropbox..."):
+            try:
+                # We assume dropbox_load returns the raw bytes for the .tif
+                dem_bytes = dropbox_load_binary(dropbox_tif_path)
+                
+                # Write to the local data directory
+                with open(local_tif_path, "wb") as f:
+                    f.write(dem_bytes)
+            except Exception as e:
+                st.error(f"Failed to load DEM from Dropbox: {e}")
+                return None
+
+    # 2. Open the local file with rasterio
+    return rasterio.open(local_tif_path)
 
 def load_json(path, default):
     return dropbox_load(path)
@@ -539,5 +554,6 @@ if page == "Library":
         if st.button("Close"):
             st.session_state.selected_route = None
             st.rerun()
+
 
 
