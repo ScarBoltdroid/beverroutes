@@ -505,7 +505,7 @@ if page == "Library":
         # Rating
         st.subheader("Your Rating")
         user_rating = r.get("ratings",{}).get(st.session_state.user,3)
-        new_rating = st.slider("Rate this route",1,5,user_rating)
+        new_rating = st.slider("Rate this route",1,10,user_rating)
         if st.button("Save Rating"):
             r.setdefault("ratings",{})[st.session_state.user] = new_rating
             for i, route in enumerate(routes):
@@ -554,6 +554,7 @@ if page == "Library":
         if st.button("Close"):
             st.session_state.selected_route = None
             st.rerun()
+
 
 
 
