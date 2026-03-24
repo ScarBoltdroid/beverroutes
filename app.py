@@ -418,10 +418,14 @@ if page == "Library":
     filtered = []
 
     for r in routes:
+        try:
+            start_city = r.get("start_city", "")
+        except TypeError:
+            start_city = ""
         searchable_text = " ".join([
             r.get("name", ""),
             r.get("tags", ""),
-            r.get("start_city", ""),
+            start_city,
             " ".join(r.get("cities", []))
         ]).lower()
 
