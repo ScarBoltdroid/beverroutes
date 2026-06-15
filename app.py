@@ -412,14 +412,14 @@ if page == "Library":
 
     search = st.text_input("Search (name, tags, cities)")
     min_km, max_km = st.slider("Distance", 0, 200, (0, 200))
-    min_ele, max_ele = st.slider("Elevation", 0, 2000, (0, 2000))
+    min_ele, max_ele = st.slider("Elevation", 0, 4000, (0, 4000))
     bearing_filter = st.selectbox("Filter by bearing (inbound)", ["All","N","NE","E","SE","S","SW","W","NW"])
 
     filtered = []
 
     for r in routes:
         try:
-            start_city = r.get("start_city", "")
+            start_city = " ".join(r.get("start_city", ""))
         except TypeError:
             start_city = ""
         searchable_text = " ".join([
@@ -509,7 +509,7 @@ if page == "Library":
         # Rating
         st.subheader("Your Rating")
         user_rating = r.get("ratings",{}).get(st.session_state.user,3)
-        new_rating = st.slider("Rate this route",1,10,user_rating)
+        new_rating = st.slider("Rate this route",1,5,user_rating)
         if st.button("Save Rating"):
             r.setdefault("ratings",{})[st.session_state.user] = new_rating
             for i, route in enumerate(routes):
