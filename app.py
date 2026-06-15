@@ -506,39 +506,6 @@ if page == "Library":
         f"Showing {start_idx+1}-{min(end_idx,len(filtered))}"
         f" of {len(filtered)} routes"
     )
-
-    for r in page_routes:
-        with st.container():
-            cols = st.columns([1, 2])
-
-            with cols[0]:
-                route_map(r["points"], key=f"preview_{r['id']}")
-
-            with cols[1]:
-                st.subheader(r["name"])
-                st.write(f"📏 {r['distance_km']:.1f} km")
-                st.write(f"⛰️ {r['elevation_m']:.0f} m")
-                if r.get("dir_out"):
-                    st.write(f"🧭 {deg_to_compass(r['dir_out'])} → {deg_to_compass(r['dir_back'])}")
-                st.write(f"📍 Start: {r.get('start_city')}")
-                st.write(f"🏙️ Cities: {', '.join(r.get('cities', []))}")
-
-                ratings = r.get("ratings",{})
-                if ratings:
-                    avg = sum(ratings.values()) / len(ratings)
-                    st.write(f"⭐ {avg:.1f} ({len(ratings)} ratings)")
-
-                st.markdown(
-    f"""
-    <div style="text-align: right; font-style: italic; color: #D3D3D3; font-size: 0.9em;">
-        Added by {r['added_by']}
-    </div>
-    """, 
-    unsafe_allow_html=True
-)
-                if st.button("View", key=f"view_{r['id']}"):
-                    st.session_state.selected_route = r
-
     # ==============================
     # Detail View
     # ==============================
@@ -617,4 +584,37 @@ if page == "Library":
         if st.button("Close"):
             st.session_state.selected_route = None
             st.rerun()
+    for r in page_routes:
+        with st.container():
+            cols = st.columns([1, 2])
+
+            with cols[0]:
+                route_map(r["points"], key=f"preview_{r['id']}")
+
+            with cols[1]:
+                st.subheader(r["name"])
+                st.write(f"📏 {r['distance_km']:.1f} km")
+                st.write(f"⛰️ {r['elevation_m']:.0f} m")
+                if r.get("dir_out"):
+                    st.write(f"🧭 {deg_to_compass(r['dir_out'])} → {deg_to_compass(r['dir_back'])}")
+                st.write(f"📍 Start: {r.get('start_city')}")
+                st.write(f"🏙️ Cities: {', '.join(r.get('cities', []))}")
+
+                ratings = r.get("ratings",{})
+                if ratings:
+                    avg = sum(ratings.values()) / len(ratings)
+                    st.write(f"⭐ {avg:.1f} ({len(ratings)} ratings)")
+
+                st.markdown(
+    f"""
+    <div style="text-align: right; font-style: italic; color: #D3D3D3; font-size: 0.9em;">
+        Added by {r['added_by']}
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
+                if st.button("View", key=f"view_{r['id']}"):
+                    st.session_state.selected_route = r
+
+
 
