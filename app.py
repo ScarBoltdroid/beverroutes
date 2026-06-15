@@ -83,7 +83,11 @@ def load_municipalities(topojson_path):
 
     return gdf
 
-municipalities = load_municipalities("belgium.json")
+@st.cache_resource
+def get_municipalities():
+    return load_municipalities("belgium.json")
+
+municipalities = get_municipalities()
 
 # ==============================
 # Authentication (LOCAL ONLY)
@@ -289,23 +293,47 @@ def parse_gpx(file):
 # Route storage
 # ==============================
 
+@st.cache_data(ttl=300)
 def load_routes():
     return load_json(ROUTES_FILE, [])
 
 
 def save_routes(routes):
     save_json(ROUTES_FILE, routes)
+    load_routes.clear()
 
 
 # ==============================
 # Map rendering
 # ==============================
+@st.cache_data
+def get_route_coords(points_dict):
+    df = pd.DataFrame(points_dict)
+    return (
+        df["lat"].mean(),
+        df["lon"].mean(),
+        df[["lat", "lon"]].values.tolist()
+    )
 
 def route_map(points_dict, height=250, key=None):
-    df = pd.DataFrame(points_dict)
-    m = folium.Map(location=[df.lat.mean(), df.lon.mean()], zoom_start=10)
-    folium.PolyLine(df[["lat", "lon"]].values.tolist(), weight=4).add_to(m)
-    return st_folium(m, height=height, width=None, key=key)
+    center_lat, center_lon, coords = get_route_coords(points_dict)
+
+    m = folium.Map(
+        location=[center_lat, center_lon],
+        zoom_start=10
+    )
+
+    folium.PolyLine(
+        coords,
+        weight=4
+    ).add_to(m)
+
+    return st_folium(
+        m,
+        height=height,
+        width=None,
+        key=key
+    )
 
 
 # ==============================
@@ -430,11 +458,14 @@ if page == "Library":
         ]).lower()
 
         if search.strip():
-            score = fuzz.token_set_ratio(search.lower(), searchable_text)
-            matches_search = score > 60
-        else:
-            matches_search = True
-
+            if len(search.strip()) < 3:
+                matches_search = True
+            else:
+                score = fuzz.token_set_ratio(
+                    search.lower(),
+                    searchable_text
+                )
+                matches_search = score > 60
         matches_distance = min_km <= r["distance_km"] <= max_km
         matches_elevation = min_ele <= r["elevation_m"] <= max_ele
 
@@ -448,7 +479,32 @@ if page == "Library":
     # Keep previous natural ordering (by id)
     filtered = sorted(filtered, key=lambda x: x["id"])
 
-    for r in filtered:
+    PAGE_SIZE = 10
+
+    total_pages = max(
+        1,
+        math.ceil(len(filtered) / PAGE_SIZE)
+    )
+
+    page_num = st.number_input(
+        "Page",
+        min_value=1,
+        max_value=total_pages,
+        value=1,
+        step=1
+    )
+
+    start_idx = (page_num - 1) * PAGE_SIZE
+    end_idx = start_idx + PAGE_SIZE
+
+    page_routes = filtered[start_idx:end_idx]
+
+    st.caption(
+        f"Showing {start_idx+1}-{min(end_idx,len(filtered))}"
+        f" of {len(filtered)} routes"
+    )
+
+    for r in page_routes:
         with st.container():
             cols = st.columns([1, 2])
 
@@ -558,7 +614,4 @@ if page == "Library":
         if st.button("Close"):
             st.session_state.selected_route = None
             st.rerun()
-
-
-
 
