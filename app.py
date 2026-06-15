@@ -466,6 +466,9 @@ if page == "Library":
                     searchable_text
                 )
                 matches_search = score > 60
+        else:
+            matches_search = True
+            
         matches_distance = min_km <= r["distance_km"] <= max_km
         matches_elevation = min_ele <= r["elevation_m"] <= max_ele
 
